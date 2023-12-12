@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>ripples</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="logo.png" type="image/x-icon">
+  <style>
+    html {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      height: 100%;
+      background-color: black;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="screen"></canvas>
+  <script>
+    const canvas = document.querySelector('#screen');
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      dots = [];
+      for (let i = 0; i < canvas.width; i += 15) for (let j = 0; j < canvas.height; j += 15) dots.push(new Dot(i, j));
+    }
+    window.onresize = resize;
+    const ctx = canvas.getContext('2d');
+
+    document.onmousedown = (e) => {
+      let x = (Math.round(e.clientX / 15) * 15) + 15 / 2;
+      let y = (Math.round(e.clientY / 15) * 15) + 15 / 2;
+      if (ripples.length < 15) ripples.push(new Ripple(x, y));
+    }
+
+    class Ripple {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.r = 0
+        this.check = false;
+      }
+
+      update() {
+        this.r += 5;
+        dots.forEach(dot => {
+          let depth = Math.abs(this.r - Math.sqrt((dot.x - this.x) * (dot.x - this.x) + (dot.y - this.y) * (dot.y - this.y)));
+          if (depth < 15) {
+            dot.w += .8;
+            dot.h += .8;
+            this.check = true;
+          }
+        });
+        if (this.check == false) ripples.splice(this, 1);
+        this.check = false;
+      }
+    }
+
+    class Dot {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.w = 1;
+        this.h = 1;
+      }
+
+      update() {
+        if (this.w > 1) {
+          this.w -= .2;
+          this.h -= .2;
+        } else {
+          this.w = 1;
+          this.h = 1;
+        }
+      }
+
+      paint() {
+        ctx.fillStyle = '#00f';
+        ctx.fillRect(this.x - (this.w / 2), this.y - (this.h / 2), this.w, this.h);
+      }
+    }
+
+    let ripples = [];
+    let dots = [];
+
+    resize();
+
+    run();
+    function run() {
+      requestAnimationFrame(run);
+      update();
+      paint();
+    }
+
+    function update() {
+      dots.forEach(dot => {
+        dot.update();
+      });
+      ripples.forEach(ripple => {
+        ripple.update();
+      });
+    }
+
+    function paint() {
+      ctx.fillStyle = '#222';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      dots.forEach(dot => {
+        dot.paint();
+      });
+    }
+  </script>
+</body>
+
+</html>
